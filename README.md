@@ -1,16 +1,36 @@
 # Fringe Ingredient Decoder
 
-Fringe Ingredient Decoder is a SwiftUI iPhone app for quickly understanding food and beauty ingredient lists.
+Fringe Ingredient Decoder is a scan-first SwiftUI iPhone app for quickly understanding food and cosmetic ingredient lists.
 
-It supports:
+## What It Does
 
-- barcode lookup with Open Food Facts
-- on-device ingredient parsing and scoring
-- offline ingredient matching from bundled public datasets
-- silent long-tail ingredient improvement with cached local resolutions
-- local recent history, favorites, and tap-through ingredient detail
+- scans barcodes with Open Food Facts and Open Beauty Facts lookups
+- parses pasted ingredient text on-device
+- classifies ingredients locally with bundled public reference data
+- silently resolves long-tail unknowns in the background and caches them for later
+- stores recent products, manual entries, and favorites locally
 
-Support and privacy pages live in [`docs/`](/Users/alperea/ios-apps/fringe-ingredient-decoder/docs) and are prepared for GitHub Pages at:
+## Product Direction
+
+The app is built around a few constraints:
+
+- immediate, low-friction scanning
+- recognition before explanation
+- compact result summaries
+- tap-through detail only when needed
+- no accounts, no backend, no required sync
+
+## Data Sources
+
+- Open Food Facts
+- Open Beauty Facts
+- FDA inactive ingredient data
+
+Scoring and ingredient interpretation are heuristic and on-device. The app does not make medical or safety claims.
+
+## Site
+
+Project pages are published from [`docs/`](/Users/alperea/ios-apps/fringe-ingredient-decoder/docs):
 
 - `https://armper.github.io/fringe-ingredient-decoder/`
 - `https://armper.github.io/fringe-ingredient-decoder/privacy.html`
