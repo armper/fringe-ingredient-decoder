@@ -1,1 +1,3 @@
-First release.
+Better ingredient matching, including fuzzier label variants and more local ingredient coverage.
+Smarter score tuning with stronger food signal blending and improved long-tail ingredient handling.
+Faster follow-up lookups with silent local caching for ingredients that need extra resolution.

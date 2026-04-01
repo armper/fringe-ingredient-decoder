@@ -78,7 +78,9 @@ final class IngredientAnalysisEngineTests: XCTestCase {
             domain: .food
         )
 
-        let ingredient = analysis.ingredients.first { $0.normalizedName == "allura red" }
+        let ingredient = analysis.ingredients.first {
+            ["allura red", "red 40"].contains($0.normalizedName)
+        }
         XCTAssertEqual(ingredient?.category, .coloring)
         XCTAssertEqual(ingredient?.confidence, .high)
     }
@@ -163,6 +165,98 @@ final class IngredientAnalysisEngineTests: XCTestCase {
         XCTAssertEqual(analysis.ingredients.first?.confidence, .high)
         XCTAssertEqual(analysis.ingredients.first?.detail.whatItIs, "A film-forming polymer.")
     }
+
+    func testLocalVariantLookupMatchesMonoglycerides() {
+        let engine = IngredientAnalysisEngine()
+
+        let analysis = engine.analyze(
+            title: "Bread",
+            ingredientsText: "Wheat flour, monoglycerides, salt",
+            source: .manual,
+            domain: .food
+        )
+
+        let ingredient = analysis.ingredients.first { $0.name == "Monoglycerides" }
+        XCTAssertEqual(ingredient?.category, .emulsifier)
+        XCTAssertEqual(ingredient?.confidence, .high)
+    }
+
+    func testFuzzyLookupMatchesNearColorNameLocally() {
+        let engine = IngredientAnalysisEngine()
+
+        let analysis = engine.analyze(
+            title: "Candy",
+            ingredientsText: "Sugar, Red Color 40, citric acid",
+            source: .manual,
+            domain: .food
+        )
+
+        let ingredient = analysis.ingredients.first { $0.name == "Red Color 40" }
+        XCTAssertEqual(ingredient?.category, .coloring)
+        XCTAssertTrue([.high, .medium].contains(ingredient?.confidence))
+    }
+
+    func testVariantLookupMatchesHashColorNameLocally() {
+        let engine = IngredientAnalysisEngine()
+
+        let analysis = engine.analyze(
+            title: "Candy",
+            ingredientsText: "Sugar, Red #40, citric acid",
+            source: .manual,
+            domain: .food
+        )
+
+        let ingredient = analysis.ingredients.first { $0.name == "Red 40" || $0.name == "Red #40" }
+        XCTAssertEqual(ingredient?.category, .coloring)
+        XCTAssertEqual(ingredient?.normalizedName, "red 40")
+    }
+
+    func testFoodScoreInputsPenalizeUltraProcessedNutritionProfile() {
+        let engine = IngredientAnalysisEngine()
+
+        let baseline = engine.analyze(
+            title: "Bar",
+            ingredientsText: "Dates, almonds, cocoa powder, sea salt",
+            source: .manual,
+            domain: .food
+        )
+
+        let scored = engine.analyze(
+            title: "Bar",
+            ingredientsText: "Dates, almonds, cocoa powder, sea salt",
+            source: .manual,
+            domain: .food,
+            scoreInputs: ProductScoreInputs(
+                nutritionGrade: "e",
+                novaGroup: 4,
+                additiveCount: 5
+            )
+        )
+
+        XCTAssertLessThan(scored.score, baseline.score)
+        XCTAssertTrue(scored.negatives.contains(where: { $0.title == "Nutrition profile" }))
+        XCTAssertTrue(scored.negatives.contains(where: { $0.title == "Ultra-processed signals" }))
+    }
+
+    func testFoodScoreInputsRewardBetterNutritionAndProcessing() {
+        let engine = IngredientAnalysisEngine()
+
+        let scored = engine.analyze(
+            title: "Yogurt",
+            ingredientsText: "Milk, strawberries, cultures",
+            source: .manual,
+            domain: .food,
+            scoreInputs: ProductScoreInputs(
+                nutritionGrade: "a",
+                novaGroup: 1,
+                additiveCount: 0
+            )
+        )
+
+        XCTAssertGreaterThanOrEqual(scored.score, 85)
+        XCTAssertTrue(scored.positives.contains(where: { $0.title == "Nutrition profile" }))
+        XCTAssertTrue(scored.positives.contains(where: { $0.title == "Less processed" }))
+    }
 }
 
 final class IngredientResolutionServiceTests: XCTestCase {
@@ -222,6 +316,34 @@ final class IngredientResolutionServiceTests: XCTestCase {
         XCTAssertEqual(resolved.first?.category, .stabilizer)
         XCTAssertEqual(resolved.first?.confidence, .high)
         XCTAssertEqual(resolved.first?.source, .openBeautyFacts)
+    }
+
+    func testResolveUnknownsFallsBackToHeuristicCategoryWhenSuggestionIsNotLocal() async {
+        let engine = IngredientAnalysisEngine()
+        let suggestionService = MockSuggestionService(results: [
+            "mystery inci polymer": "Invented Crosspolymer"
+        ])
+        let service = IngredientResolutionService(suggestionService: suggestionService, analysisEngine: engine)
+
+        let resolved = await service.resolveUnknowns(
+            ingredients: [
+                IngredientAnalysis(
+                    name: "Mystery INCI Polymer",
+                    normalizedName: "mystery inci polymer",
+                    category: .unknown,
+                    confidence: .low,
+                    detail: IngredientDetail(
+                        whatItIs: "Unknown",
+                        purpose: "Unknown"
+                    )
+                )
+            ],
+            domain: .beauty
+        )
+
+        XCTAssertEqual(resolved.first?.category, .stabilizer)
+        XCTAssertEqual(resolved.first?.confidence, .medium)
+        XCTAssertEqual(resolved.first?.canonicalName, "Invented Crosspolymer")
     }
 
     func testResolveUnknownsDeduplicatesQueriesByNormalizedName() async {
@@ -313,6 +435,27 @@ final class OpenFoodFactsServiceTests: XCTestCase {
 
         XCTAssertEqual(remote?.ingredientsText, "water, glycerin, parfum")
         XCTAssertEqual(remote?.domain, .beauty)
+    }
+
+    func testMakeRemoteProductExtractsFoodScoreInputs() {
+        let service = OpenFoodFactsService()
+
+        let remote = service.makeRemoteProduct(
+            from: [
+                "product_name": "Crackers",
+                "code": "123",
+                "ingredients_text_en": "wheat flour, oil, salt",
+                "nutriscore_grade": "d",
+                "nova_group": 4,
+                "additives_n": 3
+            ],
+            fallbackBarcode: nil,
+            domain: .food
+        )
+
+        XCTAssertEqual(remote?.scoreInputs?.nutritionGrade, "d")
+        XCTAssertEqual(remote?.scoreInputs?.novaGroup, 4)
+        XCTAssertEqual(remote?.scoreInputs?.additiveCount, 3)
     }
 }
 
@@ -499,7 +642,7 @@ final class DecoderStoreTests: XCTestCase {
             .found(
                 RemoteProduct(
                     title: "Styler",
-                    ingredientsText: "Water, Mystery Polymer",
+                    ingredientsText: "Water, Mystery Resin",
                     barcode: "2222222222222",
                     imageURL: nil,
                     domain: .beauty
@@ -509,8 +652,8 @@ final class DecoderStoreTests: XCTestCase {
         let resolution = MockResolutionService(
             resolvedIngredients: [
                 ResolvedIngredient(
-                    canonicalName: "Mystery Polymer",
-                    normalizedName: "mystery polymer",
+                    canonicalName: "Mystery Resin",
+                    normalizedName: "mystery resin",
                     category: .stabilizer,
                     confidence: .high,
                     whatItIs: "A film-forming polymer.",
@@ -550,7 +693,7 @@ final class DecoderStoreTests: XCTestCase {
             .found(
                 RemoteProduct(
                     title: "Styler",
-                    ingredientsText: "Water, Mystery Polymer",
+                    ingredientsText: "Water, Mystery Resin",
                     barcode: "3333333333333",
                     imageURL: nil,
                     domain: .beauty
@@ -560,8 +703,8 @@ final class DecoderStoreTests: XCTestCase {
         let firstResolution = MockResolutionService(
             resolvedIngredients: [
                 ResolvedIngredient(
-                    canonicalName: "Mystery Polymer",
-                    normalizedName: "mystery polymer",
+                    canonicalName: "Mystery Resin",
+                    normalizedName: "mystery resin",
                     category: .stabilizer,
                     confidence: .high,
                     whatItIs: "A film-forming polymer.",
@@ -596,7 +739,7 @@ final class DecoderStoreTests: XCTestCase {
             .found(
                 RemoteProduct(
                     title: "Snack",
-                    ingredientsText: "Water, Mystery Polymer",
+                    ingredientsText: "Water, Mystery Resin",
                     barcode: "4444444444444",
                     imageURL: nil,
                     domain: .food
@@ -618,9 +761,70 @@ final class DecoderStoreTests: XCTestCase {
         XCTAssertEqual(resolution.invocations, 1)
     }
 
+    func testManualSubmissionLogsUnmatchedIngredientsLocally() async throws {
+        let defaults = makeIsolatedDefaults()
+        let container = try makeContainer()
+        let context = ModelContext(container)
+        let resolution = MockResolutionService(resolvedIngredients: [], delayNanoseconds: 20_000_000)
+        let store = DecoderStore(defaults: defaults, resolutionService: resolution)
+        store.manualText = "Water, Totallymadeup Ingredient"
+
+        await store.submitManualIngredients(modelContext: context)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        let unmatched = try context.fetch(FetchDescriptor<UnmatchedIngredientRecord>())
+        XCTAssertEqual(unmatched.count, 1)
+        XCTAssertEqual(unmatched.first?.normalizedName, "totallymadeup ingredient")
+        XCTAssertEqual(unmatched.first?.hitCount, 1)
+    }
+
+    func testResolvedRefreshDoesNotLogRecoveredIngredientAsUnmatched() async throws {
+        let defaults = makeIsolatedDefaults()
+        let container = try makeContainer()
+        let context = ModelContext(container)
+        let lookup = MockLookupService(outcomes: [
+            .found(
+                RemoteProduct(
+                    title: "Styler",
+                    ingredientsText: "Water, Mystery Resin",
+                    barcode: "7777777777777",
+                    imageURL: nil,
+                    domain: .beauty
+                )
+            )
+        ])
+        let resolution = MockResolutionService(
+            resolvedIngredients: [
+                ResolvedIngredient(
+                    canonicalName: "Mystery Resin",
+                    normalizedName: "mystery resin",
+                    category: .stabilizer,
+                    confidence: .high,
+                    whatItIs: "A film-forming polymer.",
+                    purpose: "It helps hold texture and structure.",
+                    source: .openBeautyFacts,
+                    updatedAt: .now
+                )
+            ],
+            delayNanoseconds: 50_000_000
+        )
+        let store = DecoderStore(defaults: defaults, lookupService: lookup, resolutionService: resolution)
+
+        await store.handleScannedBarcode("7777777777777", modelContext: context)
+        try await Task.sleep(nanoseconds: 180_000_000)
+
+        let unmatched = try context.fetch(FetchDescriptor<UnmatchedIngredientRecord>())
+        XCTAssertTrue(unmatched.isEmpty)
+    }
+
     private func makeContainer() throws -> ModelContainer {
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
-        return try ModelContainer(for: RecentAnalysisRecord.self, IngredientResolutionRecord.self, configurations: configuration)
+        return try ModelContainer(
+            for: RecentAnalysisRecord.self,
+            IngredientResolutionRecord.self,
+            UnmatchedIngredientRecord.self,
+            configurations: configuration
+        )
     }
 
     private func makeIsolatedDefaults() -> UserDefaults {

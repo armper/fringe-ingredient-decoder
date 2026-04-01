@@ -79,7 +79,8 @@ struct OpenFoodFactsService {
                             product["image_front_small_url"] as? String,
                             product["image_front_url"] as? String
                         ),
-                        domain: domain
+                        domain: domain,
+                        scoreInputs: scoreInputs(from: product, domain: domain)
                     )
                 )
             }
@@ -93,7 +94,7 @@ struct OpenFoodFactsService {
     private func performRequest(url: URL) async throws -> [String: Any] {
         var request = URLRequest(url: url)
         request.timeoutInterval = 8
-        request.setValue("FringeIngredientDecoder/1.0 (iOS)", forHTTPHeaderField: "User-Agent")
+        request.setValue("FringeIngredientDecoder/1.1 (iOS)", forHTTPHeaderField: "User-Agent")
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let response = response as? HTTPURLResponse, (200 ... 299).contains(response.statusCode) else {
@@ -133,8 +134,42 @@ struct OpenFoodFactsService {
                 product["image_front_small_url"] as? String,
                 product["image_front_url"] as? String
             ),
-            domain: domain
+            domain: domain,
+            scoreInputs: scoreInputs(from: product, domain: domain)
         )
+    }
+
+    private func scoreInputs(from product: [String: Any], domain: ProductDomain) -> ProductScoreInputs? {
+        guard domain == .food else { return nil }
+
+        let nutritionGrade = firstNonEmpty(
+            product["nutriscore_grade"] as? String,
+            product["nutrition_grades"] as? String
+        )?.lowercased()
+
+        let novaGroup = intValue(product["nova_group"]) ?? intValue(product["nova_groups"])
+        let additiveCount = intValue(product["additives_n"])
+
+        let inputs = ProductScoreInputs(
+            nutritionGrade: nutritionGrade,
+            novaGroup: novaGroup,
+            additiveCount: additiveCount
+        )
+
+        return inputs.hasSignals ? inputs : nil
+    }
+
+    private func intValue(_ value: Any?) -> Int? {
+        switch value {
+        case let intValue as Int:
+            return intValue
+        case let number as NSNumber:
+            return number.intValue
+        case let string as String:
+            return Int(string.trimmingCharacters(in: .whitespacesAndNewlines))
+        default:
+            return nil
+        }
     }
 
     func baseURL(for domain: ProductDomain) -> String {

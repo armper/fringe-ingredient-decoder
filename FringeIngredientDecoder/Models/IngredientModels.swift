@@ -194,6 +194,16 @@ struct IngredientAnalysis: Identifiable, Codable, Hashable {
     var id: String { normalizedName }
 }
 
+struct ProductScoreInputs: Codable, Hashable {
+    let nutritionGrade: String?
+    let novaGroup: Int?
+    let additiveCount: Int?
+
+    var hasSignals: Bool {
+        nutritionGrade != nil || novaGroup != nil || additiveCount != nil
+    }
+}
+
 struct AnalyzedProduct: Identifiable, Codable, Hashable {
     let id: UUID
     let title: String
@@ -209,6 +219,7 @@ struct AnalyzedProduct: Identifiable, Codable, Hashable {
     let alerts: [PreferenceAlert]
     let barcode: String?
     let imageURL: String?
+    let scoreInputs: ProductScoreInputs?
     let createdAt: Date
 
     init(
@@ -226,6 +237,7 @@ struct AnalyzedProduct: Identifiable, Codable, Hashable {
         alerts: [PreferenceAlert],
         barcode: String? = nil,
         imageURL: String? = nil,
+        scoreInputs: ProductScoreInputs? = nil,
         createdAt: Date = .now
     ) {
         self.id = id
@@ -242,6 +254,7 @@ struct AnalyzedProduct: Identifiable, Codable, Hashable {
         self.alerts = alerts
         self.barcode = barcode
         self.imageURL = imageURL
+        self.scoreInputs = scoreInputs
         self.createdAt = createdAt
     }
 
@@ -271,6 +284,23 @@ struct RemoteProduct {
     let barcode: String
     let imageURL: String?
     let domain: ProductDomain
+    let scoreInputs: ProductScoreInputs?
+
+    init(
+        title: String,
+        ingredientsText: String,
+        barcode: String,
+        imageURL: String?,
+        domain: ProductDomain,
+        scoreInputs: ProductScoreInputs? = nil
+    ) {
+        self.title = title
+        self.ingredientsText = ingredientsText
+        self.barcode = barcode
+        self.imageURL = imageURL
+        self.domain = domain
+        self.scoreInputs = scoreInputs
+    }
 }
 
 enum LookupOutcome {

@@ -8,6 +8,6 @@ struct FringeIngredientDecoderApp: App {
             ContentView()
                 .preferredColorScheme(.dark)
         }
-        .modelContainer(for: [RecentAnalysisRecord.self, IngredientResolutionRecord.self])
+        .modelContainer(for: [RecentAnalysisRecord.self, IngredientResolutionRecord.self, UnmatchedIngredientRecord.self])
     }
 }

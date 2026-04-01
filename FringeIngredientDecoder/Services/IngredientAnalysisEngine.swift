@@ -12,13 +12,14 @@ struct IngredientAnalysisEngine {
         barcode: String? = nil,
         imageURL: String? = nil,
         preferences: PreferenceProfile = .default,
+        scoreInputs: ProductScoreInputs? = nil,
         id: UUID = UUID(),
         createdAt: Date = .now,
         resolvedIngredients: [String: ResolvedIngredient] = [:]
     ) -> AnalyzedProduct {
         let ingredientNames = parser.parse(ingredientsText)
         let ingredients = ingredientNames.map { knowledgeBase.describe($0, resolvedIngredients: resolvedIngredients) }
-        let scorecard = makeScorecard(for: ingredients, domain: domain)
+        let scorecard = makeScorecard(for: ingredients, domain: domain, scoreInputs: scoreInputs)
         let alerts = makeAlerts(for: ingredients, preferences: preferences)
         let summary = makeSummary(
             for: ingredients,
@@ -42,6 +43,7 @@ struct IngredientAnalysisEngine {
             alerts: alerts,
             barcode: barcode,
             imageURL: imageURL,
+            scoreInputs: scoreInputs,
             createdAt: createdAt
         )
     }
@@ -65,6 +67,26 @@ struct IngredientAnalysisEngine {
             source: source,
             updatedAt: .now
         )
+    }
+
+    func makeHeuristicResolvedIngredient(
+        originalNormalizedName: String,
+        suggestedName: String,
+        source: IngredientResolutionSource
+    ) -> ResolvedIngredient? {
+        knowledgeBase.makeHeuristicResolvedIngredient(
+            originalNormalizedName: originalNormalizedName,
+            suggestedName: suggestedName,
+            source: source
+        )
+    }
+
+    func normalize(_ text: String) -> String {
+        knowledgeBase.normalize(text)
+    }
+
+    func displayName(forNormalizedName normalizedName: String) -> String {
+        knowledgeBase.displayName(forNormalizedName: normalizedName)
     }
 
     private func makeSummary(
@@ -121,7 +143,7 @@ struct IngredientAnalysisEngine {
         }
     }
 
-    private func makeScorecard(for ingredients: [IngredientAnalysis], domain: ProductDomain) -> Scorecard {
+    private func makeScorecard(for ingredients: [IngredientAnalysis], domain: ProductDomain, scoreInputs: ProductScoreInputs?) -> Scorecard {
         guard !ingredients.isEmpty else {
             return Scorecard(
                 score: 24,
@@ -144,13 +166,13 @@ struct IngredientAnalysisEngine {
         }.count
         let lowConfidenceCount = ingredients.filter { $0.confidence == .low }.count
 
-        var score = 100
-        for ingredient in ingredients {
-            score -= weight(for: ingredient.category, domain: domain)
+        var score = 100.0
+        for (index, ingredient) in ingredients.enumerated() {
+            score -= Double(weight(for: ingredient.category, domain: domain)) * positionWeight(for: index)
         }
 
-        score -= min(max(0, ingredients.count - 6) * 2, 18)
-        score -= min(lowConfidenceCount * 2, 8)
+        score -= Double(min(max(0, ingredients.count - 6) * 2, 18))
+        score -= Double(min(lowConfidenceCount * 2, 8))
 
         if ingredients.count <= 6 {
             score += 10
@@ -178,10 +200,19 @@ struct IngredientAnalysisEngine {
             score -= 6
         }
 
-        score = max(1, min(100, score))
+        if domain == .food, let scoreInputs, scoreInputs.hasSignals {
+            let ingredientScore = Int(max(1, min(100, score.rounded())))
+            score = Double(blendedFoodScore(
+                ingredientScore: ingredientScore,
+                parsedAdditiveCount: additiveCount,
+                scoreInputs: scoreInputs
+            ))
+        }
+
+        let finalScore = Int(max(1, min(100, score.rounded())))
 
         let grade: ProductGrade
-        switch score {
+        switch finalScore {
         case 85...:
             grade = .excellent
         case 70...84:
@@ -198,6 +229,8 @@ struct IngredientAnalysisEngine {
 
         var positives: [ProductSignal] = []
         var negatives: [ProductSignal] = []
+        var productLevelPositives: [ProductSignal] = []
+        var productLevelNegatives: [ProductSignal] = []
 
         if ingredients.count <= 6 {
             positives.append(ProductSignal(title: "Short list", detail: "Only \(ingredients.count) ingredients show up.", emphasis: "\(ingredients.count)"))
@@ -271,12 +304,168 @@ struct IngredientAnalysisEngine {
             negatives.append(ProductSignal(title: "Longer list", detail: "A longer label can point to a more engineered formula.", emphasis: "\(ingredients.count)"))
         }
 
+        if domain == .food, let scoreInputs {
+            if let nutritionGrade = scoreInputs.nutritionGrade?.uppercased() {
+                if ["A", "B"].contains(nutritionGrade) {
+                    productLevelPositives.append(
+                        ProductSignal(
+                            title: "Nutrition profile",
+                            detail: "Open Food Facts nutrition grade lands on the stronger side.",
+                            emphasis: nutritionGrade
+                        )
+                    )
+                } else if ["D", "E"].contains(nutritionGrade) {
+                    productLevelNegatives.append(
+                        ProductSignal(
+                            title: "Nutrition profile",
+                            detail: "Open Food Facts nutrition grade lands on the weaker side.",
+                            emphasis: nutritionGrade
+                        )
+                    )
+                }
+            }
+
+            if let novaGroup = scoreInputs.novaGroup {
+                if novaGroup <= 2 {
+                    productLevelPositives.append(
+                        ProductSignal(
+                            title: "Less processed",
+                            detail: "Open Food Facts processing group is closer to minimally processed.",
+                            emphasis: "NOVA \(novaGroup)"
+                        )
+                    )
+                } else if novaGroup >= 4 {
+                    productLevelNegatives.append(
+                        ProductSignal(
+                            title: "Ultra-processed signals",
+                            detail: "Open Food Facts flags this product in the highest processing group.",
+                            emphasis: "NOVA \(novaGroup)"
+                        )
+                    )
+                }
+            }
+
+            if let remoteAdditives = scoreInputs.additiveCount, remoteAdditives >= 4 {
+                productLevelNegatives.append(
+                    ProductSignal(
+                        title: "Database additives",
+                        detail: "Open Food Facts lists several additives for this product.",
+                        emphasis: "\(remoteAdditives)"
+                    )
+                )
+            }
+        }
+
+        positives = productLevelPositives + positives
+        negatives = productLevelNegatives + negatives
+
         return Scorecard(
-            score: score,
+            score: finalScore,
             grade: grade,
             positives: Array(positives.prefix(3)),
             negatives: Array(negatives.prefix(4))
         )
+    }
+
+    private func positionWeight(for index: Int) -> Double {
+        switch index {
+        case 0...2:
+            return 1.35
+        case 3...6:
+            return 1.0
+        default:
+            return 0.72
+        }
+    }
+
+    private func blendedFoodScore(ingredientScore: Int, parsedAdditiveCount: Int, scoreInputs: ProductScoreInputs) -> Int {
+        let nutritionScore = scoreInputs.nutritionGrade.flatMap(foodNutritionScore(for:))
+        let processingScore = foodProcessingAdditiveScore(
+            novaGroup: scoreInputs.novaGroup,
+            additiveCount: scoreInputs.additiveCount ?? parsedAdditiveCount
+        )
+
+        let blended: Double
+        switch (nutritionScore, processingScore) {
+        case let (.some(nutritionScore), .some(processingScore)):
+            blended =
+                (Double(nutritionScore) * 0.45) +
+                (Double(processingScore) * 0.25) +
+                (Double(ingredientScore) * 0.30)
+        case let (.some(nutritionScore), .none):
+            blended =
+                (Double(nutritionScore) * 0.55) +
+                (Double(ingredientScore) * 0.45)
+        case let (.none, .some(processingScore)):
+            blended =
+                (Double(processingScore) * 0.40) +
+                (Double(ingredientScore) * 0.60)
+        case (.none, .none):
+            blended = Double(ingredientScore)
+        }
+
+        return Int(max(1, min(100, blended.rounded())))
+    }
+
+    private func foodNutritionScore(for grade: String) -> Int? {
+        switch grade.lowercased() {
+        case "a":
+            return 96
+        case "b":
+            return 82
+        case "c":
+            return 64
+        case "d":
+            return 41
+        case "e":
+            return 18
+        default:
+            return nil
+        }
+    }
+
+    private func foodProcessingScore(for novaGroup: Int) -> Int {
+        switch novaGroup {
+        case 1:
+            return 94
+        case 2:
+            return 78
+        case 3:
+            return 52
+        case 4:
+            return 22
+        default:
+            return 50
+        }
+    }
+
+    private func foodProcessingAdditiveScore(novaGroup: Int?, additiveCount: Int?) -> Int? {
+        guard novaGroup != nil || additiveCount != nil else { return nil }
+
+        var score = novaGroup.map(foodProcessingScore(for:)) ?? 66
+
+        if let additiveCount {
+            switch additiveCount {
+            case ...0:
+                score += 10
+            case 1:
+                score += 4
+            case 2:
+                break
+            case 3:
+                score -= 6
+            case 4...5:
+                score -= 12
+            default:
+                score -= 18
+            }
+        }
+
+        if let novaGroup, novaGroup >= 4, (additiveCount ?? 0) >= 4 {
+            score -= 8
+        }
+
+        return max(1, min(100, score))
     }
 
     private func makeAlerts(for ingredients: [IngredientAnalysis], preferences: PreferenceProfile) -> [PreferenceAlert] {
@@ -449,6 +638,11 @@ private struct IngredientKnowledgeBase {
         let detail: IngredientDetail
     }
 
+    private struct SearchCandidate {
+        let searchKey: String
+        let canonicalKey: String
+    }
+
     private struct CatalogFile: Decodable {
         struct CatalogEntry: Decodable {
             let category: IngredientCategory
@@ -463,22 +657,67 @@ private struct IngredientKnowledgeBase {
     private final class BundleMarker {}
 
     private static let generatedCatalog = loadGeneratedCatalog()
+    private static let mergedAliases = generatedCatalog.aliases.merging(manualAliases) { _, manual in manual }
+    private static let mergedEntries = generatedCatalog.entries.merging(manualEntries) { _, manual in manual }
 
-    private let aliases: [String: String] = {
-        Self.generatedCatalog.aliases.merging(manualAliases) { _, manual in manual }
-    }()
+    private let aliases = Self.mergedAliases
 
-    private let entries: [String: Entry] = {
-        Self.generatedCatalog.entries.merging(manualEntries) { _, manual in manual }
-    }()
+    private let entries = Self.mergedEntries
+
+    private let tokenIndex = Self.makeTokenIndex()
+
+    private static func makeTokenIndex() -> [String: [SearchCandidate]] {
+        var index: [String: [SearchCandidate]] = [:]
+        let candidates = manualEntries.keys.map { SearchCandidate(searchKey: $0, canonicalKey: $0) } +
+            Self.generatedCatalog.entries.keys.map { SearchCandidate(searchKey: $0, canonicalKey: $0) } +
+            mergedAliases.map { SearchCandidate(searchKey: $0.key, canonicalKey: $0.value) }
+
+        var seen = Set<String>()
+        for candidate in candidates {
+            let dedupeKey = "\(candidate.searchKey)|\(candidate.canonicalKey)"
+            guard seen.insert(dedupeKey).inserted else { continue }
+
+            for token in significantTokens(in: candidate.searchKey) where token.count >= 3 {
+                index[token, default: []].append(candidate)
+            }
+        }
+
+        return index
+    }
 
     private static let manualAliases: [String: String] = [
         "parfum": "fragrance",
         "natural flavour": "natural flavors",
+        "natural flavourings": "natural flavors",
         "artificial flavour": "artificial flavors",
+        "artificial flavourings": "artificial flavors",
         "sls": "sodium lauryl sulfate",
         "sles": "sodium laureth sulfate",
-        "msg": "monosodium glutamate"
+        "msg": "monosodium glutamate",
+        "monoglycerides": "mono and diglycerides of fatty acids",
+        "diglycerides": "mono and diglycerides of fatty acids",
+        "mixed tocopherols": "tocopherol",
+        "tocopherols": "tocopherol",
+        "fd and c red no 40": "red 40",
+        "fd and c red 40": "red 40",
+        "red #40": "red 40",
+        "red color 40": "red 40",
+        "red no 40": "red 40",
+        "fd and c yellow no 5": "yellow 5",
+        "fd and c yellow 5": "yellow 5",
+        "yellow #5": "yellow 5",
+        "yellow color 5": "yellow 5",
+        "yellow no 5": "yellow 5",
+        "fd and c yellow no 6": "yellow 6",
+        "fd and c yellow 6": "yellow 6",
+        "yellow #6": "yellow 6",
+        "yellow color 6": "yellow 6",
+        "yellow no 6": "yellow 6",
+        "fd and c blue no 1": "blue 1",
+        "fd and c blue 1": "blue 1",
+        "blue #1": "blue 1",
+        "blue color 1": "blue 1",
+        "blue no 1": "blue 1"
     ]
 
     private static let manualEntries: [String: Entry] = [
@@ -589,6 +828,28 @@ private struct IngredientKnowledgeBase {
             )
         }
 
+        for variant in normalizedVariants(for: normalized) {
+            if let entry = entries[variant] {
+                return IngredientAnalysis(
+                    name: displayName(from: rawName),
+                    normalizedName: variant,
+                    category: entry.category,
+                    confidence: .high,
+                    detail: entry.detail
+                )
+            }
+
+            if let canonical = aliases[variant], let entry = entries[canonical] {
+                return IngredientAnalysis(
+                    name: displayName(from: rawName),
+                    normalizedName: canonical,
+                    category: entry.category,
+                    confidence: .high,
+                    detail: entry.detail
+                )
+            }
+        }
+
         if let resolved = resolvedIngredients[normalized] {
             return IngredientAnalysis(
                 name: resolved.canonicalName,
@@ -596,6 +857,16 @@ private struct IngredientKnowledgeBase {
                 category: resolved.category,
                 confidence: resolved.confidence,
                 detail: resolved.detail
+            )
+        }
+
+        if let fuzzyMatch = fuzzyMatch(for: normalized) {
+            return IngredientAnalysis(
+                name: displayName(from: rawName),
+                normalizedName: fuzzyMatch.canonicalKey,
+                category: fuzzyMatch.entry.category,
+                confidence: fuzzyMatch.confidence,
+                detail: fuzzyMatch.entry.detail
             )
         }
 
@@ -624,15 +895,15 @@ private struct IngredientKnowledgeBase {
 
     private func inferEntry(for normalized: String) -> (category: IngredientCategory, confidence: IngredientConfidence, detail: IngredientDetail) {
         let keywordRules: [(IngredientCategory, [String], IngredientDetail)] = [
-            (.preservative, ["benzoate", "sorbate", "nitrite", "nitrate", "propionate", "phenoxyethanol", "tocopherol"], IngredientDetail(whatItIs: "A preservative-style ingredient.", purpose: "It likely helps the product last longer on the shelf.")),
+            (.preservative, ["benzoate", "sorbate", "nitrite", "nitrate", "propionate", "phenoxyethanol", "tocopherol", "paraben", "dehydroacetic"], IngredientDetail(whatItIs: "A preservative-style ingredient.", purpose: "It likely helps the product last longer on the shelf.")),
             (.sweetener, ["sucralose", "aspartame", "saccharin", "stevia", "syrup"], IngredientDetail(whatItIs: "A sweetener-style ingredient.", purpose: "It likely increases sweetness or rounds out flavor.")),
-            (.coloring, ["color", "red ", "yellow ", "blue ", "lake"], IngredientDetail(whatItIs: "A color additive.", purpose: "It changes or standardizes the product's appearance.")),
-            (.emulsifier, ["lecithin", "diglyceride", "polysorbate", "peg-", "ceteareth"], IngredientDetail(whatItIs: "An emulsifier.", purpose: "It helps ingredients stay evenly mixed.")),
-            (.stabilizer, ["gum", "carrageenan", "cellulose", "dimethicone"], IngredientDetail(whatItIs: "A stabilizer or thickener.", purpose: "It helps control texture and keep ingredients suspended.")),
+            (.coloring, ["color", "red ", "yellow ", "blue ", "green ", "orange ", "lake", "ci "], IngredientDetail(whatItIs: "A color additive.", purpose: "It changes or standardizes the product's appearance.")),
+            (.emulsifier, ["lecithin", "diglyceride", "polysorbate", "peg-", "ceteareth", "polyglyceryl", "sorbitan"], IngredientDetail(whatItIs: "An emulsifier.", purpose: "It helps ingredients stay evenly mixed.")),
+            (.stabilizer, ["gum", "carrageenan", "cellulose", "dimethicone", "copolymer", "crosspolymer", "carbomer", "acrylates", "polymer"], IngredientDetail(whatItIs: "A stabilizer or texture-building ingredient.", purpose: "It helps control texture, suspension, or film formation.")),
             (.fragrance, ["fragrance", "parfum", "perfume"], IngredientDetail(whatItIs: "A scent blend.", purpose: "It shapes the smell of the product.")),
-            (.solvent, ["glycol", "alcohol", "isododecane"], IngredientDetail(whatItIs: "A carrier or solvent.", purpose: "It helps dissolve or spread other ingredients.")),
-            (.surfactant, ["sulfate", "betaine", "glucoside"], IngredientDetail(whatItIs: "A surfactant.", purpose: "It helps water mix with oils and lift residue.")),
-            (.additive, ["flavor", "acid"], IngredientDetail(whatItIs: "A functional additive.", purpose: "It likely supports taste, tartness, or stability."))
+            (.solvent, ["glycol", "alcohol", "isododecane", "hexanediol"], IngredientDetail(whatItIs: "A carrier or solvent.", purpose: "It helps dissolve or spread other ingredients.")),
+            (.surfactant, ["sulfate", "betaine", "glucoside", "sarcosinate", "isethionate", "taurate"], IngredientDetail(whatItIs: "A surfactant.", purpose: "It helps water mix with oils and lift residue.")),
+            (.additive, ["flavor", "flavour", "acid", "extract"], IngredientDetail(whatItIs: "A functional additive.", purpose: "It likely supports taste, tartness, or stability."))
         ]
 
         for (category, keywords, detail) in keywordRules {
@@ -651,10 +922,146 @@ private struct IngredientKnowledgeBase {
         )
     }
 
+    private func normalizedVariants(for normalized: String) -> [String] {
+        var variants: [String] = []
+
+        func append(_ value: String) {
+            let cleaned = normalize(value)
+            guard !cleaned.isEmpty, cleaned != normalized, !variants.contains(cleaned) else { return }
+            variants.append(cleaned)
+        }
+
+        append(normalized.replacingOccurrences(of: " colour ", with: " color "))
+        append(normalized.replacingOccurrences(of: " flavourings", with: " flavors"))
+        append(normalized.replacingOccurrences(of: " flavouring", with: " flavor"))
+        append(normalized.replacingOccurrences(of: " flavour ", with: " flavor "))
+        append(normalized.replacingOccurrences(of: " colour ", with: " "))
+        append(normalized.replacingOccurrences(of: " color ", with: " "))
+
+        if normalized.hasPrefix("mixed ") {
+            append(String(normalized.dropFirst("mixed ".count)))
+        }
+
+        if normalized.hasSuffix("s"), normalized.count > 5 {
+            append(String(normalized.dropLast()))
+        }
+
+        if normalized == "monoglycerides" || normalized == "diglycerides" {
+            append("mono and diglycerides of fatty acids")
+        }
+
+        if normalized == "tocopherols" {
+            append("tocopherol")
+        }
+
+        let colorPatterns = [
+            (#"fd and c (red|yellow|blue|green) no ?(\d+)"#, "$1 $2"),
+            (#"(red|yellow|blue|green|orange) color ?(\d+)"#, "$1 $2"),
+            (#"(red|yellow|blue|green|orange) no ?(\d+)"#, "$1 $2"),
+            (#"(red|yellow|blue|green|orange) # ?(\d+)"#, "$1 $2"),
+        ]
+
+        for (pattern, template) in colorPatterns {
+            let range = NSRange(normalized.startIndex..<normalized.endIndex, in: normalized)
+            let regex = try? NSRegularExpression(pattern: pattern)
+            let replaced = regex?.stringByReplacingMatches(in: normalized, options: [], range: range, withTemplate: template)
+            if let replaced {
+                append(replaced)
+            }
+        }
+
+        return variants
+    }
+
+    private func fuzzyMatch(for normalized: String) -> (canonicalKey: String, entry: Entry, confidence: IngredientConfidence)? {
+        let tokens = significantTokens(in: normalized)
+        guard !tokens.isEmpty else { return nil }
+
+        var candidatesByKey: [String: SearchCandidate] = [:]
+        let sortedTokens = tokens.sorted { lhs, rhs in
+            let lhsCount = tokenIndex[lhs]?.count ?? .max
+            let rhsCount = tokenIndex[rhs]?.count ?? .max
+            if lhsCount == rhsCount {
+                return lhs.count > rhs.count
+            }
+            return lhsCount < rhsCount
+        }
+
+        for token in sortedTokens.prefix(4) {
+            for candidate in tokenIndex[token, default: []] {
+                candidatesByKey["\(candidate.searchKey)|\(candidate.canonicalKey)"] = candidate
+                if candidatesByKey.count >= 220 {
+                    break
+                }
+            }
+            if candidatesByKey.count >= 220 {
+                break
+            }
+        }
+
+        var best: (candidate: SearchCandidate, score: Double)?
+        for candidate in candidatesByKey.values {
+            guard let entry = entries[candidate.canonicalKey] else { continue }
+            var score = similarityScore(lhs: normalized, rhs: candidate.searchKey)
+
+            if entry.category != .unknown {
+                score += 0.04
+            }
+
+            if best == nil || score > best!.score {
+                best = (candidate, score)
+            }
+        }
+
+        guard let best, let entry = entries[best.candidate.canonicalKey] else { return nil }
+        guard best.score >= 0.74 else { return nil }
+
+        let confidence: IngredientConfidence = best.score >= 0.9 ? .high : .medium
+        return (best.candidate.canonicalKey, entry, confidence)
+    }
+
+    private func similarityScore(lhs: String, rhs: String) -> Double {
+        if lhs == rhs {
+            return 1
+        }
+
+        let lhsTokens = Set(significantTokens(in: lhs))
+        let rhsTokens = Set(significantTokens(in: rhs))
+        let tokenDenominator = Double(Swift.max(Swift.max(lhsTokens.count, rhsTokens.count), 1))
+        let overlap = Double(lhsTokens.intersection(rhsTokens).count) / tokenDenominator
+
+        var score = overlap * 0.68
+        score += diceCoefficient(lhs, rhs) * 0.28
+
+        if lhs.contains(rhs) || rhs.contains(lhs) {
+            score += 0.08
+        }
+
+        if !lhsTokens.isEmpty, lhsTokens.isSubset(of: rhsTokens) || rhsTokens.isSubset(of: lhsTokens) {
+            score += 0.08
+        }
+
+        let lhsDigits = lhs.filter(\.isNumber)
+        let rhsDigits = rhs.filter(\.isNumber)
+        if !lhsDigits.isEmpty && lhsDigits == rhsDigits {
+            score += 0.08
+        } else if lhsDigits != rhsDigits {
+            score -= 0.06
+        }
+
+        return score
+    }
+
     func normalize(_ text: String) -> String {
         var normalized = text.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current).lowercased()
         normalized = normalized.replacingOccurrences(of: "&", with: " and ")
         normalized = normalized.replacingOccurrences(of: #"[\*\.\u{00AE}\u{2122}]"#, with: " ", options: .regularExpression)
+        normalized = normalized.replacingOccurrences(of: "#", with: " ")
+        normalized = normalized.replacingOccurrences(of: #"(?i)\bno\.?\b"#, with: " ", options: .regularExpression)
+        normalized = normalized.replacingOccurrences(of: #"(?i)\bnos\.?\b"#, with: " ", options: .regularExpression)
+        normalized = normalized.replacingOccurrences(of: #"(?i)\bnumber\b"#, with: " ", options: .regularExpression)
+        normalized = normalized.replacingOccurrences(of: #"(?i)\bfd\s*and\s*c\b"#, with: " ", options: .regularExpression)
+        normalized = normalized.replacingOccurrences(of: #"(?i)\bfd\s*&\s*c\b"#, with: " ", options: .regularExpression)
         normalized = normalized.replacingOccurrences(of: #"(?i)\borganic\b"#, with: "", options: .regularExpression)
         normalized = normalized.replacingOccurrences(of: #"(?i)\band/or\b"#, with: " ", options: .regularExpression)
         normalized = normalized.replacingOccurrences(of: #"\s*/\s*"#, with: "/", options: .regularExpression)
@@ -664,8 +1071,39 @@ private struct IngredientKnowledgeBase {
         return normalized.trimmingCharacters(in: CharacterSet(charactersIn: " -/"))
     }
 
-    private func displayName(from raw: String) -> String {
-        raw
+    func makeHeuristicResolvedIngredient(
+        originalNormalizedName: String,
+        suggestedName: String,
+        source: IngredientResolutionSource
+    ) -> ResolvedIngredient? {
+        let normalizedSuggestion = normalize(suggestedName)
+        guard !normalizedSuggestion.isEmpty else { return nil }
+
+        let inferred = inferEntry(for: normalizedSuggestion)
+        guard inferred.category != .unknown || normalizedSuggestion != originalNormalizedName else { return nil }
+
+        let confidence: IngredientConfidence = inferred.category == .unknown ? .low : .medium
+        let detail = inferred.category == .unknown
+            ? IngredientDetail(
+                whatItIs: "A standardized ingredient name matched from a public ingredient taxonomy.",
+                purpose: "Local classification is still limited, but this name is more specific than the original label match."
+            )
+            : inferred.detail
+
+        return ResolvedIngredient(
+            canonicalName: displayName(forNormalizedName: normalizedSuggestion),
+            normalizedName: originalNormalizedName,
+            category: inferred.category,
+            confidence: confidence,
+            whatItIs: detail.whatItIs,
+            purpose: detail.purpose,
+            source: source,
+            updatedAt: .now
+        )
+    }
+
+    func displayName(forNormalizedName normalizedName: String) -> String {
+        normalizedName
             .split(separator: " ")
             .map { word in
                 let original = String(word)
@@ -677,5 +1115,45 @@ private struct IngredientKnowledgeBase {
                 return lower.prefix(1).uppercased() + lower.dropFirst()
             }
             .joined(separator: " ")
+    }
+
+    private func displayName(from raw: String) -> String {
+        raw
+            .replacingOccurrences(of: "\n", with: " ")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .isEmpty
+            ? raw
+            : displayName(forNormalizedName: normalize(raw))
+    }
+
+    private static func significantTokens(in normalized: String) -> [String] {
+        let stopWords: Set<String> = ["and", "or", "of", "the", "with", "from", "to", "for", "no"]
+        return normalized
+            .split(whereSeparator: { $0 == " " || $0 == "/" || $0 == "-" || $0 == "+" })
+            .map(String.init)
+            .filter { $0.count >= 2 && !stopWords.contains($0) }
+    }
+
+    private func significantTokens(in normalized: String) -> [String] {
+        Self.significantTokens(in: normalized)
+    }
+
+    private func diceCoefficient(_ lhs: String, _ rhs: String) -> Double {
+        let lhsBigrams = bigrams(for: lhs)
+        let rhsBigrams = bigrams(for: rhs)
+
+        guard !lhsBigrams.isEmpty, !rhsBigrams.isEmpty else { return 0 }
+
+        let overlap = lhsBigrams.intersection(rhsBigrams).count
+        return (2 * Double(overlap)) / Double(lhsBigrams.count + rhsBigrams.count)
+    }
+
+    private func bigrams(for text: String) -> Set<String> {
+        let compact = text.replacingOccurrences(of: " ", with: "")
+        guard compact.count >= 2 else { return [compact] }
+        let characters = Array(compact)
+        return Set((0 ..< (characters.count - 1)).map { index in
+            String(characters[index ... index + 1])
+        })
     }
 }

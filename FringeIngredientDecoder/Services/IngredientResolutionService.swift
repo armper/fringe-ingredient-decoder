@@ -34,7 +34,7 @@ struct IngredientResolutionService: IngredientResolutionServing {
         var resolved: [ResolvedIngredient] = []
         for ingredient in candidates {
             do {
-                guard let suggestion = try await suggestionService.fetchSuggestion(for: ingredient.name, domain: domain) else {
+                guard let suggestion = try await fetchSuggestion(for: ingredient, domain: domain) else {
                     continue
                 }
 
@@ -45,6 +45,12 @@ struct IngredientResolutionService: IngredientResolutionServing {
                     source: source(for: domain)
                 ) {
                     resolved.append(match)
+                } else if let heuristicMatch = analysisEngine.makeHeuristicResolvedIngredient(
+                    originalNormalizedName: ingredient.normalizedName,
+                    suggestedName: suggestion,
+                    source: source(for: domain)
+                ) {
+                    resolved.append(heuristicMatch)
                 }
             } catch {
                 continue
@@ -54,6 +60,15 @@ struct IngredientResolutionService: IngredientResolutionServing {
         return resolved
     }
 
+    private func fetchSuggestion(for ingredient: IngredientAnalysis, domain: ProductDomain) async throws -> String? {
+        for query in queryVariants(for: ingredient) {
+            if let suggestion = try await suggestionService.fetchSuggestion(for: query, domain: domain) {
+                return suggestion
+            }
+        }
+        return nil
+    }
+
     private func source(for domain: ProductDomain) -> IngredientResolutionSource {
         switch domain {
         case .beauty:
@@ -61,6 +76,43 @@ struct IngredientResolutionService: IngredientResolutionServing {
         case .food, .custom:
             return .openFoodFacts
         }
+    }
+
+    private func queryVariants(for ingredient: IngredientAnalysis) -> [String] {
+        var variants: [String] = []
+
+        func append(_ value: String) {
+            let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty, !variants.contains(trimmed) else { return }
+            variants.append(trimmed)
+        }
+
+        append(ingredient.name)
+
+        let normalized = analysisEngine.normalize(ingredient.name)
+        append(analysisEngine.displayName(forNormalizedName: normalized))
+
+        if normalized.hasPrefix("mixed ") {
+            append(analysisEngine.displayName(forNormalizedName: String(normalized.dropFirst("mixed ".count))))
+        }
+
+        if normalized.contains(" color ") {
+            append(analysisEngine.displayName(forNormalizedName: normalized.replacingOccurrences(of: " color ", with: " ")))
+        }
+
+        if normalized.contains("flavour") {
+            append(analysisEngine.displayName(forNormalizedName: normalized.replacingOccurrences(of: "flavour", with: "flavor")))
+        }
+
+        if normalized.contains(" no ") {
+            append(analysisEngine.displayName(forNormalizedName: normalized.replacingOccurrences(of: " no ", with: " ")))
+        }
+
+        if normalized.contains(" color ") {
+            append(analysisEngine.displayName(forNormalizedName: normalized.replacingOccurrences(of: " color ", with: " ")))
+        }
+
+        return variants
     }
 }
 
@@ -88,7 +140,7 @@ private struct IngredientSuggestionAPI: IngredientSuggestionServing {
 
         var request = URLRequest(url: url)
         request.timeoutInterval = 8
-        request.setValue("FringeIngredientDecoder/1.0 (iOS)", forHTTPHeaderField: "User-Agent")
+        request.setValue("FringeIngredientDecoder/1.1 (iOS)", forHTTPHeaderField: "User-Agent")
 
         let (data, response) = try await session.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, (200 ... 299).contains(httpResponse.statusCode) else {

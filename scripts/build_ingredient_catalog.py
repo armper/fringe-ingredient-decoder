@@ -104,13 +104,13 @@ class CatalogEntry:
 
 
 def fetch_text(url: str) -> str:
-    request = urllib.request.Request(url, headers={"User-Agent": "FringeIngredientDecoder/1.0"})
+    request = urllib.request.Request(url, headers={"User-Agent": "FringeIngredientDecoder/1.1"})
     with urllib.request.urlopen(request, timeout=60) as response:
         return response.read().decode("utf-8", "ignore")
 
 
 def fetch_bytes(url: str) -> bytes:
-    request = urllib.request.Request(url, headers={"User-Agent": "FringeIngredientDecoder/1.0"})
+    request = urllib.request.Request(url, headers={"User-Agent": "FringeIngredientDecoder/1.1"})
     with urllib.request.urlopen(request, timeout=60) as response:
         return response.read()
 
@@ -120,8 +120,14 @@ def normalize(text: str) -> str:
     folded = "".join(character for character in folded if not unicodedata.combining(character))
     folded = folded.lower()
     folded = folded.replace("&", " and ")
+    folded = folded.replace("#", " ")
     folded = re.sub(r"(?i)\borganic\b", " ", folded)
     folded = re.sub(r"(?i)\band/or\b", " ", folded)
+    folded = re.sub(r"(?i)\bno\.?\b", " ", folded)
+    folded = re.sub(r"(?i)\bnos\.?\b", " ", folded)
+    folded = re.sub(r"(?i)\bnumber\b", " ", folded)
+    folded = re.sub(r"(?i)\bfd\s*and\s*c\b", " ", folded)
+    folded = re.sub(r"(?i)\bfd\s*&\s*c\b", " ", folded)
     folded = re.sub(r"[\u00ae\u2122*]", " ", folded)
     folded = re.sub(r"[.]+", " ", folded)
     folded = re.sub(r"\s*/\s*", "/", folded)
@@ -143,6 +149,52 @@ def title_case_name(text: str) -> str:
         else:
             output.append(part[:1].upper() + part[1:].lower())
     return "".join(output)
+
+
+def alias_variants(text: str):
+    normalized = normalize(text)
+    if not normalized:
+        return set()
+
+    variants = {normalized, normalized.replace("-", " ")}
+
+    replacements = [
+        (" colour ", " color "),
+        (" flavourings", " flavors"),
+        (" flavouring", " flavor"),
+        (" flavour ", " flavor "),
+        (" colour ", " "),
+        (" color ", " "),
+        (" non gmo ", " gmo free "),
+        (" gmo free ", " non gmo "),
+    ]
+
+    def add(value: str):
+        cleaned = normalize(value)
+        if cleaned:
+            variants.add(cleaned)
+
+    for source, target in replacements:
+        if source in normalized:
+            add(normalized.replace(source, target))
+
+    if normalized.startswith("mixed "):
+        add(normalized[len("mixed "):])
+
+    if normalized.endswith("s") and len(normalized) > 5:
+        add(normalized[:-1])
+
+    color_patterns = [
+        (r"(red|yellow|blue|green|orange) (\d+)", r"\1 color \2"),
+        (r"(red|yellow|blue|green|orange) (\d+)", r"\1 no \2"),
+        (r"(red|yellow|blue|green|orange) (\d+)", r"\1 #\2"),
+    ]
+
+    for pattern, template in color_patterns:
+        if re.fullmatch(pattern, normalized):
+            add(re.sub(pattern, template, normalized))
+
+    return {variant for variant in variants if variant}
 
 
 def compact_sentence(text: str, limit: int = 140) -> str:
@@ -198,10 +250,8 @@ def add_entry(entries, aliases, canonical_name, alias_names, category, descripti
 
     alias_pool = [canonical_name] + list(alias_names)
     for alias in alias_pool:
-        normalized_alias = normalize(alias)
-        if normalized_alias:
+        for normalized_alias in alias_variants(alias):
             aliases.setdefault(normalized_alias, canonical_key)
-            aliases.setdefault(normalized_alias.replace("-", " "), canonical_key)
 
 
 def parse_blocks(text: str):
@@ -258,11 +308,19 @@ def parse_taxonomy_block(block):
 
 def build_global_synonym_aliases(aliases, synonym_groups):
     for group in synonym_groups:
-        normalized = [normalize(item) for item in group if normalize(item)]
+        normalized = []
+        for item in group:
+            normalized.extend(alias_variants(item))
         if len(normalized) < 2:
             continue
-        target = normalized[0]
+        deduped = []
+        seen = set()
         for item in normalized:
+            if item not in seen:
+                seen.add(item)
+                deduped.append(item)
+        target = deduped[0]
+        for item in deduped:
             aliases.setdefault(item, target)
 
 

@@ -92,10 +92,15 @@ final class DecoderStore: ObservableObject {
             ingredientsText: trimmed,
             source: .manual,
             domain: inferManualDomain(from: trimmed),
-            preferences: preferenceProfile
+            preferences: preferenceProfile,
+            scoreInputs: nil
         )
 
-        present(applyingCachedResolutions(to: baseResult, modelContext: modelContext), modelContext: modelContext)
+        present(
+            applyingCachedResolutions(to: baseResult, modelContext: modelContext),
+            modelContext: modelContext,
+            shouldTrackUnmatched: true
+        )
     }
 
     func handleScannedBarcode(_ code: String, modelContext: ModelContext) async {
@@ -121,9 +126,14 @@ final class DecoderStore: ObservableObject {
                 domain: product.domain,
                 barcode: product.barcode,
                 imageURL: product.imageURL,
-                preferences: preferenceProfile
+                preferences: preferenceProfile,
+                scoreInputs: product.scoreInputs
             )
-            present(applyingCachedResolutions(to: baseAnalysis, modelContext: modelContext), modelContext: modelContext)
+            present(
+                applyingCachedResolutions(to: baseAnalysis, modelContext: modelContext),
+                modelContext: modelContext,
+                shouldTrackUnmatched: true
+            )
         case .notFound:
             inlineNotice = InlineNotice(text: "No match. Paste ingredients instead.")
             prepareManualEntry(clearingNotice: false)
@@ -167,13 +177,13 @@ final class DecoderStore: ObservableObject {
         present(rebuildAnalysis(from: analysis, modelContext: modelContext), modelContext: modelContext)
     }
 
-    private func present(_ analysis: AnalyzedProduct, modelContext: ModelContext) {
+    private func present(_ analysis: AnalyzedProduct, modelContext: ModelContext, shouldTrackUnmatched: Bool = false) {
         resolutionTask?.cancel()
         resolutionTask = nil
         activeResult = analysis
         inlineNotice = nil
         save(analysis, in: modelContext)
-        startResolutionIfNeeded(for: analysis, modelContext: modelContext)
+        startResolutionIfNeeded(for: analysis, modelContext: modelContext, shouldTrackUnmatched: shouldTrackUnmatched)
     }
 
     private func save(_ analysis: AnalyzedProduct, in modelContext: ModelContext) {
@@ -211,6 +221,7 @@ final class DecoderStore: ObservableObject {
             barcode: analysis.barcode,
             imageURL: analysis.imageURL,
             preferences: preferenceProfile,
+            scoreInputs: analysis.scoreInputs,
             id: analysis.id,
             createdAt: analysis.createdAt
         )
@@ -230,14 +241,20 @@ final class DecoderStore: ObservableObject {
             barcode: analysis.barcode,
             imageURL: analysis.imageURL,
             preferences: preferenceProfile,
+            scoreInputs: analysis.scoreInputs,
             id: analysis.id,
             createdAt: analysis.createdAt,
             resolvedIngredients: resolvedIngredients
         )
     }
 
-    private func startResolutionIfNeeded(for analysis: AnalyzedProduct, modelContext: ModelContext) {
-        guard analysis.ingredients.contains(where: { shouldResolveIngredient($0) }) else { return }
+    private func startResolutionIfNeeded(for analysis: AnalyzedProduct, modelContext: ModelContext, shouldTrackUnmatched: Bool = false) {
+        guard analysis.ingredients.contains(where: { shouldResolveIngredient($0) }) else {
+            if shouldTrackUnmatched {
+                persistUnmatchedIngredients(from: analysis, in: modelContext)
+            }
+            return
+        }
 
         let resultID = analysis.id
         resolutionTask = Task { @MainActor [weak self] in
@@ -248,20 +265,41 @@ final class DecoderStore: ObservableObject {
                 domain: analysis.domain
             )
 
-            guard !Task.isCancelled, !resolvedIngredients.isEmpty else { return }
+            if Task.isCancelled {
+                return
+            }
+
+            guard !resolvedIngredients.isEmpty else {
+                if shouldTrackUnmatched {
+                    self.persistUnmatchedIngredients(from: analysis, in: modelContext)
+                }
+                return
+            }
 
             self.persistResolvedIngredients(resolvedIngredients, in: modelContext)
 
             guard let activeResult = self.activeResult, activeResult.id == resultID else { return }
             let refreshed = self.rebuildAnalysis(from: activeResult, modelContext: modelContext)
-            guard refreshed != activeResult else { return }
+            guard refreshed != activeResult else {
+                if shouldTrackUnmatched {
+                    self.persistUnmatchedIngredients(from: activeResult, in: modelContext)
+                }
+                return
+            }
 
             self.activeResult = refreshed
             self.save(refreshed, in: modelContext)
+            if shouldTrackUnmatched {
+                self.persistUnmatchedIngredients(from: refreshed, in: modelContext)
+            }
         }
     }
 
     private func shouldResolveIngredient(_ ingredient: IngredientAnalysis) -> Bool {
+        ingredient.confidence == .low || (ingredient.category == .unknown && ingredient.confidence != .high)
+    }
+
+    private func shouldTrackUnmatchedIngredient(_ ingredient: IngredientAnalysis) -> Bool {
         ingredient.confidence == .low || (ingredient.category == .unknown && ingredient.confidence != .high)
     }
 
@@ -291,6 +329,42 @@ final class DecoderStore: ObservableObject {
                 existing.update(from: ingredient)
             } else {
                 modelContext.insert(IngredientResolutionRecord(resolvedIngredient: ingredient))
+            }
+        }
+
+        try? modelContext.save()
+    }
+
+    private func persistUnmatchedIngredients(from analysis: AnalyzedProduct, in modelContext: ModelContext) {
+        let unmatched = analysis.ingredients.filter(shouldTrackUnmatchedIngredient)
+        guard !unmatched.isEmpty else { return }
+        guard let records = try? modelContext.fetch(FetchDescriptor<UnmatchedIngredientRecord>()) else { return }
+
+        var recordsByKey: [String: UnmatchedIngredientRecord] = [:]
+        for record in records {
+            recordsByKey[record.key] = record
+        }
+
+        for ingredient in unmatched {
+            let key = UnmatchedIngredientRecord.makeKey(normalizedName: ingredient.normalizedName, domain: analysis.domain)
+            if let existing = recordsByKey[key] {
+                existing.registerHit(
+                    displayName: ingredient.name,
+                    source: analysis.source,
+                    confidence: ingredient.confidence,
+                    sampleTitle: analysis.title
+                )
+            } else {
+                let record = UnmatchedIngredientRecord(
+                    normalizedName: ingredient.normalizedName,
+                    displayName: ingredient.name,
+                    domain: analysis.domain,
+                    source: analysis.source,
+                    confidence: ingredient.confidence,
+                    sampleTitle: analysis.title
+                )
+                recordsByKey[key] = record
+                modelContext.insert(record)
             }
         }
 

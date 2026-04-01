@@ -84,3 +84,55 @@ final class IngredientResolutionRecord {
         )
     }
 }
+
+@Model
+final class UnmatchedIngredientRecord {
+    @Attribute(.unique) var key: String
+    var normalizedName: String
+    var displayName: String
+    var domainRaw: String
+    var lastSourceRaw: String
+    var lastConfidenceRaw: String
+    var sampleTitle: String
+    var hitCount: Int
+    var firstSeenAt: Date
+    var lastSeenAt: Date
+
+    init(
+        normalizedName: String,
+        displayName: String,
+        domain: ProductDomain,
+        source: AnalysisSource,
+        confidence: IngredientConfidence,
+        sampleTitle: String,
+        seenAt: Date = .now
+    ) {
+        self.key = Self.makeKey(normalizedName: normalizedName, domain: domain)
+        self.normalizedName = normalizedName
+        self.displayName = displayName
+        self.domainRaw = domain.rawValue
+        self.lastSourceRaw = source.rawValue
+        self.lastConfidenceRaw = confidence.rawValue
+        self.sampleTitle = sampleTitle
+        self.hitCount = 1
+        self.firstSeenAt = seenAt
+        self.lastSeenAt = seenAt
+    }
+
+    func registerHit(displayName: String, source: AnalysisSource, confidence: IngredientConfidence, sampleTitle: String, seenAt: Date = .now) {
+        self.displayName = displayName
+        self.lastSourceRaw = source.rawValue
+        self.lastConfidenceRaw = confidence.rawValue
+        self.sampleTitle = sampleTitle
+        self.hitCount += 1
+        self.lastSeenAt = seenAt
+    }
+
+    var domain: ProductDomain? {
+        ProductDomain(rawValue: domainRaw)
+    }
+
+    static func makeKey(normalizedName: String, domain: ProductDomain) -> String {
+        "\(domain.rawValue)|\(normalizedName)"
+    }
+}

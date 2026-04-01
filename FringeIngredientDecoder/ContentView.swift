@@ -5,6 +5,7 @@ import UIKit
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \RecentAnalysisRecord.createdAt, order: .reverse) private var recentRecords: [RecentAnalysisRecord]
+    @Query(sort: \UnmatchedIngredientRecord.lastSeenAt, order: .reverse) private var unmatchedIngredientRecords: [UnmatchedIngredientRecord]
     @StateObject private var store = DecoderStore()
     @FocusState private var manualInputFocused: Bool
     @State private var preferencesPresented = false
@@ -261,6 +262,10 @@ struct ContentView: View {
                 analysisStrip(title: "Recent", analyses: Array(recentAnalyses.prefix(8)), showsRelativeDate: true)
             }
 
+            if !topUnmatchedIngredients.isEmpty {
+                unmatchedStrip
+            }
+
             if store.isManualComposerExpanded {
                 manualComposer
             } else {
@@ -293,6 +298,39 @@ struct ContentView: View {
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
         .decoderPanelStyle(cornerRadius: 30)
+    }
+
+    private var unmatchedStrip: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Needs Better Matches")
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundStyle(AppTheme.secondaryText)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(topUnmatchedIngredients, id: \.key) { record in
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(record.displayName)
+                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .foregroundStyle(AppTheme.primaryText)
+                                .lineLimit(2)
+
+                            HStack(spacing: 6) {
+                                Text(record.domain?.title ?? "Custom")
+                                Text("·")
+                                Text("\(record.hitCount)x")
+                            }
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .foregroundStyle(AppTheme.secondaryText)
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 12)
+                        .frame(width: 170, alignment: .leading)
+                        .background(AppTheme.elevatedFill, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    }
+                }
+            }
+        }
     }
 
     private func analysisStrip(title: String, analyses: [AnalyzedProduct], showsRelativeDate: Bool = false) -> some View {
@@ -425,6 +463,19 @@ struct ContentView: View {
         )
     }
 
+    private var topUnmatchedIngredients: [UnmatchedIngredientRecord] {
+        Array(
+            unmatchedIngredientRecords
+                .sorted { lhs, rhs in
+                    if lhs.hitCount == rhs.hitCount {
+                        return lhs.lastSeenAt > rhs.lastSeenAt
+                    }
+                    return lhs.hitCount > rhs.hitCount
+                }
+                .prefix(6)
+        )
+    }
+
     private func uniqueAnalyses(from analyses: [AnalyzedProduct]) -> [AnalyzedProduct] {
         var seen = Set<String>()
         return analyses.filter { analysis in
@@ -462,7 +513,7 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: [RecentAnalysisRecord.self, IngredientResolutionRecord.self], inMemory: true)
+        .modelContainer(for: [RecentAnalysisRecord.self, IngredientResolutionRecord.self, UnmatchedIngredientRecord.self], inMemory: true)
 }
 
 struct ScoreChip: View {
