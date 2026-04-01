@@ -1,0 +1,18 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Upload metadata and screenshots to App Store Connect"
+  lane :metadata do
+    deliver(
+      skip_binary_upload: true,
+      skip_screenshots: false,
+      submit_for_review: false,
+      automatic_release: false,
+      force: true,
+      overwrite_screenshots: true,
+      run_precheck_before_submit: false,
+      precheck_include_in_app_purchases: false,
+      api_key_path: "/tmp/asc_api_key.json"
+    )
+  end
+end

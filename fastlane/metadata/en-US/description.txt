@@ -1,0 +1,15 @@
+Fringe Ingredient Decoder helps you make sense of ingredient lists in seconds.
+
+Open the app, tap Scan barcode when you want camera lookup, or paste ingredients directly from the same home screen. Results are designed to be understood at a glance, with a fast score, a short summary, and a clean ingredient list you can tap through.
+
+What you get:
+- barcode lookup powered by Open Food Facts
+- support for food and beauty products
+- quick summaries like Mostly Simple, Mixed Bag, or Many Additives
+- ingredient-by-ingredient tagging for additives, preservatives, sweeteners, colorings, emulsifiers, stabilizers, surfactants, fragrance, and more
+- short plain-English ingredient explanations
+- broader offline ingredient matching from a bundled reference library built from Open Food Facts, Open Beauty Facts, and FDA inactive-ingredient data
+- silent improvement for some unknown ingredients using public taxonomy suggestions, with better matches cached locally on your device
+- recent scans and manual entries saved locally for quick reopen
+
+Fringe Ingredient Decoder is built to feel calm, fast, and obvious. No account. No onboarding wall. No dense dashboards.

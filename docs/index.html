@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Fringe Ingredient Decoder helps you scan or paste ingredients and understand them at a glance." />
+  <link rel="canonical" href="https://alperea.github.io/fringe-ingredient-decoder/" />
+  <title>Fringe Ingredient Decoder</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(160deg, #060708, #101816 65%, #18342a);
+      color: #f4f7f5;
+      line-height: 1.6;
+    }
+    main { max-width: 960px; margin: 0 auto; padding: 36px 22px 64px; }
+    h1 { font-size: 2.3rem; line-height: 1.05; margin: 0 0 10px; }
+    p, li { color: rgba(244,247,245,0.78); }
+    a { color: #98f0bf; }
+    .hero {
+      padding: 28px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 30px;
+      background:
+        radial-gradient(circle at top right, rgba(152,240,191,0.18), transparent 34%),
+        rgba(255,255,255,0.06);
+      backdrop-filter: blur(10px);
+      margin-bottom: 18px;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(244,247,245,0.68);
+      margin-bottom: 16px;
+    }
+    .hero p {
+      max-width: 640px;
+      font-size: 1.05rem;
+      margin: 0 0 18px;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+    }
+    .button, .button.secondary {
+      display: inline-block;
+      padding: 12px 16px;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .button {
+      background: #98f0bf;
+      color: #07100c;
+    }
+    .button.secondary {
+      border: 1px solid rgba(255,255,255,0.16);
+      color: #f4f7f5;
+      background: rgba(255,255,255,0.04);
+    }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .card {
+      padding: 18px;
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 22px;
+      background: rgba(255,255,255,0.04);
+    }
+    .card h2 { margin-top: 0; }
+    footer {
+      margin-top: 22px;
+      color: rgba(244,247,245,0.56);
+      font-size: 0.92rem;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div class="eyebrow">Fringe Ingredient Decoder</div>
+      <h1>Fringe Ingredient Decoder</h1>
+      <p>Scan a barcode or paste ingredients and get a fast, plain-English read on what is in the product. The app is designed for quick recognition, not long explanations.</p>
+      <div class="actions">
+        <a class="button" href="./support.html">Open support</a>
+        <a class="button secondary" href="./privacy.html">Read privacy policy</a>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>What it does</h2>
+        <p>Looks up product labels with Open Food Facts, parses ingredient lists on-device, and uses a bundled ingredient library built from Open Food Facts, Open Beauty Facts, and FDA inactive-ingredient data.</p>
+        <p>When a name is still hard to match, the app can make a lightweight public taxonomy lookup and cache the improved match locally on your device.</p>
+      </article>
+      <article class="card">
+        <h2>How it feels</h2>
+        <p>Home first. Scan when you want. Paste anytime. Results are short, visual, and tap-through.</p>
+      </article>
+      <article class="card">
+        <h2>Data handling</h2>
+        <p>No account, no sync, no backend owned by the app. Recent scans, manual entries, and improved ingredient matches stay local to your device.</p>
+      </article>
+    </section>
+
+    <footer>
+      Questions: <a href="mailto:alpereastorage@gmail.com">alpereastorage@gmail.com</a>
+    </footer>
+  </main>
+</body>
+</html>

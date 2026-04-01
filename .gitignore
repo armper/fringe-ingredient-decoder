@@ -1,0 +1,10 @@
+.DS_Store
+build/
+tmp/
+
+*.xcuserstate
+xcuserdata/
+
+runtime-home*.png
+
+.swiftpm/

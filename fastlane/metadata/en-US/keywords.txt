@@ -1,0 +1,1 @@
+ingredients,barcode,scanner,food,beauty,additives,labels,cosmetics,decoder

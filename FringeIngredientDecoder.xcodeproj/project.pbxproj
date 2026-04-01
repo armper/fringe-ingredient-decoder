@@ -1,0 +1,580 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		24D2835A0F6C7F2B48343D5B /* IngredientAnalysisEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 105EE6A8849747E475F38ADB /* IngredientAnalysisEngine.swift */; };
+		2AC92C7A052E8D65F00DF423 /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02CCD5DF2FED9C8A7ACA3DA9 /* ResultView.swift */; };
+		3362F993F06C86B81D9047B9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DF47DFD6E9D3B2E95F41E7F4 /* Foundation.framework */; };
+		44207A18E8A3565556BF59B0 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27585B75A7E6F8143831143D /* ContentView.swift */; };
+		635A787711DCDA7E039B5B3D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BCFBC8FB0E7D24E1933D48FC /* Assets.xcassets */; };
+		6B5B9B44E762E8A1D720C2E1 /* IngredientCatalog.json in Resources */ = {isa = PBXBuildFile; fileRef = 6AA0CE8D03886BD314EC0093 /* IngredientCatalog.json */; };
+		943E8D9B3C6B503AFD8A3CE6 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DF47DFD6E9D3B2E95F41E7F4 /* Foundation.framework */; };
+		A1B2C3D4E5F60718293A4B5C /* IngredientResolutionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D4E5F60718293A4B5C6D7E /* IngredientResolutionRecord.swift */; };
+		A7409DE3639952EBDF46ECAC /* RecentAnalysisRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAB96A610732719DF5EAD857 /* RecentAnalysisRecord.swift */; };
+		B2C3D4E5F60718293A4B5C6D /* IngredientResolutionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4E5F60718293A4B5C6D7E8F /* IngredientResolutionService.swift */; };
+		B1E802CEA80470B81D8AD11B /* FringeIngredientDecoderApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530D411E4438A55F15006111 /* FringeIngredientDecoderApp.swift */; };
+		C727F603190A2A834757A021 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3287CE659769B2B51A9B6569 /* AppTheme.swift */; };
+		C93E6B74E05292EA2106CFD6 /* BarcodeScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98146831E2DA6C0DBE2591DC /* BarcodeScannerView.swift */; };
+		D56CE8BB63259B25325D5C4F /* DecoderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52CAA1ECDACCBCC1BED2121A /* DecoderStore.swift */; };
+		D5B4411ECA46DE8102826837 /* IngredientDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D83D3B2D2B652449A0C38159 /* IngredientDetailView.swift */; };
+		D75DB33707C0C48968F58D34 /* IngredientModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7ACF7737138B5E5677E7367 /* IngredientModels.swift */; };
+		DD58573811EC1DA744EBB63A /* IngredientAnalysisEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09ACF6A433926D8D713D321E /* IngredientAnalysisEngineTests.swift */; };
+		FB27594FE620DBEFA7D5C868 /* OpenFoodFactsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB181DAB95081AD9E68CC3E3 /* OpenFoodFactsService.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		E7C4D00A40813C38AC195B4A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5D81097E15040EDDC1830B1E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 52E339D2B74DBAB73DDEF970;
+			remoteInfo = FringeIngredientDecoder;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		02CCD5DF2FED9C8A7ACA3DA9 /* ResultView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ResultView.swift; sourceTree = "<group>"; };
+		09ACF6A433926D8D713D321E /* IngredientAnalysisEngineTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IngredientAnalysisEngineTests.swift; sourceTree = "<group>"; };
+		105EE6A8849747E475F38ADB /* IngredientAnalysisEngine.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IngredientAnalysisEngine.swift; sourceTree = "<group>"; };
+		27585B75A7E6F8143831143D /* ContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		3287CE659769B2B51A9B6569 /* AppTheme.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
+		32A9DF52167CEB7E58DD7951 /* FringeIngredientDecoder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FringeIngredientDecoder.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		33631C945AA2C083A252423C /* FringeIngredientDecoderTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FringeIngredientDecoderTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		6AA0CE8D03886BD314EC0093 /* IngredientCatalog.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = IngredientCatalog.json; sourceTree = "<group>"; };
+		52CAA1ECDACCBCC1BED2121A /* DecoderStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DecoderStore.swift; sourceTree = "<group>"; };
+		530D411E4438A55F15006111 /* FringeIngredientDecoderApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FringeIngredientDecoderApp.swift; sourceTree = "<group>"; };
+		98146831E2DA6C0DBE2591DC /* BarcodeScannerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BarcodeScannerView.swift; sourceTree = "<group>"; };
+		BAB96A610732719DF5EAD857 /* RecentAnalysisRecord.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RecentAnalysisRecord.swift; sourceTree = "<group>"; };
+		BCFBC8FB0E7D24E1933D48FC /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C3D4E5F60718293A4B5C6D7E /* IngredientResolutionRecord.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IngredientResolutionRecord.swift; sourceTree = "<group>"; };
+		D4E5F60718293A4B5C6D7E8F /* IngredientResolutionService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IngredientResolutionService.swift; sourceTree = "<group>"; };
+		D83D3B2D2B652449A0C38159 /* IngredientDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IngredientDetailView.swift; sourceTree = "<group>"; };
+		DF47DFD6E9D3B2E95F41E7F4 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		E7ACF7737138B5E5677E7367 /* IngredientModels.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IngredientModels.swift; sourceTree = "<group>"; };
+		EB181DAB95081AD9E68CC3E3 /* OpenFoodFactsService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OpenFoodFactsService.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		36CB0320C513AEA460873B9A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3362F993F06C86B81D9047B9 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		67E26867F997DFC24A46F736 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				943E8D9B3C6B503AFD8A3CE6 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1A3DCC6152596F6CC09C2A91 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				DF47DFD6E9D3B2E95F41E7F4 /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
+		27BFB75331854D3A626423F9 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				32A9DF52167CEB7E58DD7951 /* FringeIngredientDecoder.app */,
+				33631C945AA2C083A252423C /* FringeIngredientDecoderTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3DC26A70AC76217279CB3DC6 = {
+			isa = PBXGroup;
+			children = (
+				27BFB75331854D3A626423F9 /* Products */,
+				E186ED7CEFA0E46DBDCA7F87 /* Frameworks */,
+				F07AC5C77BB8273406C863C8 /* FringeIngredientDecoder */,
+				D0AEC486DB96BD5281020B60 /* FringeIngredientDecoderTests */,
+			);
+			sourceTree = "<group>";
+		};
+		4F4507EBD3175BCDEA52213B /* Scanner */ = {
+			isa = PBXGroup;
+			children = (
+				98146831E2DA6C0DBE2591DC /* BarcodeScannerView.swift */,
+			);
+			name = Scanner;
+			path = Scanner;
+			sourceTree = "<group>";
+		};
+		5C4FEED756DEB8EB81E314C3 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				EB181DAB95081AD9E68CC3E3 /* OpenFoodFactsService.swift */,
+				105EE6A8849747E475F38ADB /* IngredientAnalysisEngine.swift */,
+				D4E5F60718293A4B5C6D7E8F /* IngredientResolutionService.swift */,
+			);
+			name = Services;
+			path = Services;
+			sourceTree = "<group>";
+		};
+		6A6B0469F1B23BD7957C09B8 /* Result */ = {
+			isa = PBXGroup;
+			children = (
+				02CCD5DF2FED9C8A7ACA3DA9 /* ResultView.swift */,
+				D83D3B2D2B652449A0C38159 /* IngredientDetailView.swift */,
+			);
+			name = Result;
+			path = Result;
+			sourceTree = "<group>";
+		};
+		75758F9086BEA988BE93F66A /* Store */ = {
+			isa = PBXGroup;
+			children = (
+				52CAA1ECDACCBCC1BED2121A /* DecoderStore.swift */,
+			);
+			name = Store;
+			path = Store;
+			sourceTree = "<group>";
+		};
+		9FC3BCD333F32195440831E7 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				E7ACF7737138B5E5677E7367 /* IngredientModels.swift */,
+				BAB96A610732719DF5EAD857 /* RecentAnalysisRecord.swift */,
+				C3D4E5F60718293A4B5C6D7E /* IngredientResolutionRecord.swift */,
+			);
+			name = Models;
+			path = Models;
+			sourceTree = "<group>";
+		};
+		B9FD6E3F0E55BD0094EA2D1B /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				4F4507EBD3175BCDEA52213B /* Scanner */,
+				6A6B0469F1B23BD7957C09B8 /* Result */,
+			);
+			name = Views;
+			path = Views;
+			sourceTree = "<group>";
+		};
+		BC5C0B60777DF8382FF1131D /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				3287CE659769B2B51A9B6569 /* AppTheme.swift */,
+			);
+			name = Support;
+			path = Support;
+			sourceTree = "<group>";
+		};
+		D0AEC486DB96BD5281020B60 /* FringeIngredientDecoderTests */ = {
+			isa = PBXGroup;
+			children = (
+				09ACF6A433926D8D713D321E /* IngredientAnalysisEngineTests.swift */,
+			);
+			name = FringeIngredientDecoderTests;
+			path = FringeIngredientDecoderTests;
+			sourceTree = "<group>";
+		};
+		E186ED7CEFA0E46DBDCA7F87 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1A3DCC6152596F6CC09C2A91 /* iOS */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		F07AC5C77BB8273406C863C8 /* FringeIngredientDecoder */ = {
+			isa = PBXGroup;
+			children = (
+				9FC3BCD333F32195440831E7 /* Models */,
+				5C4FEED756DEB8EB81E314C3 /* Services */,
+				75758F9086BEA988BE93F66A /* Store */,
+				BC5C0B60777DF8382FF1131D /* Support */,
+				B9FD6E3F0E55BD0094EA2D1B /* Views */,
+				530D411E4438A55F15006111 /* FringeIngredientDecoderApp.swift */,
+				27585B75A7E6F8143831143D /* ContentView.swift */,
+				6AA0CE8D03886BD314EC0093 /* IngredientCatalog.json */,
+				BCFBC8FB0E7D24E1933D48FC /* Assets.xcassets */,
+			);
+			name = FringeIngredientDecoder;
+			path = FringeIngredientDecoder;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		360D044004B8C81C6B29B33B /* FringeIngredientDecoderTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 72E57E7CAC5F18FBBD3C21C1 /* Build configuration list for PBXNativeTarget "FringeIngredientDecoderTests" */;
+			buildPhases = (
+				4FD4D820E631A6EFCF60D82E /* Sources */,
+				67E26867F997DFC24A46F736 /* Frameworks */,
+				9649E9AE05832386455C86D3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F909350BF1D614B6F70C9942 /* PBXTargetDependency */,
+			);
+			name = FringeIngredientDecoderTests;
+			productName = FringeIngredientDecoderTests;
+			productReference = 33631C945AA2C083A252423C /* FringeIngredientDecoderTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		52E339D2B74DBAB73DDEF970 /* FringeIngredientDecoder */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7C7E826F658B65A738EFF372 /* Build configuration list for PBXNativeTarget "FringeIngredientDecoder" */;
+			buildPhases = (
+				B3B5E52ABBFC05A849BA0439 /* Sources */,
+				36CB0320C513AEA460873B9A /* Frameworks */,
+				7D240E5D75E5A1B68DDE5CC3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FringeIngredientDecoder;
+			productName = FringeIngredientDecoder;
+			productReference = 32A9DF52167CEB7E58DD7951 /* FringeIngredientDecoder.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		5D81097E15040EDDC1830B1E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 2600;
+				LastUpgradeCheck = 2600;
+			};
+			buildConfigurationList = 8B57AC874AE8C86EBA79564D /* Build configuration list for PBXProject "FringeIngredientDecoder" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 3DC26A70AC76217279CB3DC6;
+			minimizedProjectReferenceProxies = 0;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 27BFB75331854D3A626423F9 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				52E339D2B74DBAB73DDEF970 /* FringeIngredientDecoder */,
+				360D044004B8C81C6B29B33B /* FringeIngredientDecoderTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		7D240E5D75E5A1B68DDE5CC3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6B5B9B44E762E8A1D720C2E1 /* IngredientCatalog.json in Resources */,
+				635A787711DCDA7E039B5B3D /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9649E9AE05832386455C86D3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4FD4D820E631A6EFCF60D82E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DD58573811EC1DA744EBB63A /* IngredientAnalysisEngineTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B3B5E52ABBFC05A849BA0439 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B1E802CEA80470B81D8AD11B /* FringeIngredientDecoderApp.swift in Sources */,
+				44207A18E8A3565556BF59B0 /* ContentView.swift in Sources */,
+				D75DB33707C0C48968F58D34 /* IngredientModels.swift in Sources */,
+				A7409DE3639952EBDF46ECAC /* RecentAnalysisRecord.swift in Sources */,
+				A1B2C3D4E5F60718293A4B5C /* IngredientResolutionRecord.swift in Sources */,
+				FB27594FE620DBEFA7D5C868 /* OpenFoodFactsService.swift in Sources */,
+				24D2835A0F6C7F2B48343D5B /* IngredientAnalysisEngine.swift in Sources */,
+				B2C3D4E5F60718293A4B5C6D /* IngredientResolutionService.swift in Sources */,
+				D56CE8BB63259B25325D5C4F /* DecoderStore.swift in Sources */,
+				C727F603190A2A834757A021 /* AppTheme.swift in Sources */,
+				C93E6B74E05292EA2106CFD6 /* BarcodeScannerView.swift in Sources */,
+				2AC92C7A052E8D65F00DF423 /* ResultView.swift in Sources */,
+				D5B4411ECA46DE8102826837 /* IngredientDetailView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		F909350BF1D614B6F70C9942 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = FringeIngredientDecoder;
+			target = 52E339D2B74DBAB73DDEF970 /* FringeIngredientDecoder */;
+			targetProxy = E7C4D00A40813C38AC195B4A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		4EAEFD307949F6E69F639453 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 8BDNZ32KQG;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		552F83F2BE315B1EE625C29A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Fringe Ingredient Decoder";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Scan product barcodes to decode ingredients quickly.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pandasoft.fringeingredientdecoder;
+				PRODUCT_MODULE_NAME = FringeIngredientDecoder;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		8EACB5523917C5A21DD6601D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Fringe Ingredient Decoder";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Scan product barcodes to decode ingredients quickly.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pandasoft.fringeingredientdecoder;
+				PRODUCT_MODULE_NAME = FringeIngredientDecoder;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		8F729F1554B584A5FE9A1F23 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 8BDNZ32KQG;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		A1B3198A6C0DCADD4B4015E0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pandasoft.fringeingredientdecoderTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FringeIngredientDecoder.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FringeIngredientDecoder";
+				TEST_TARGET_NAME = FringeIngredientDecoder;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		CA436DECFF4CB1326A27BD28 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pandasoft.fringeingredientdecoderTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FringeIngredientDecoder.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FringeIngredientDecoder";
+				TEST_TARGET_NAME = FringeIngredientDecoder;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		72E57E7CAC5F18FBBD3C21C1 /* Build configuration list for PBXNativeTarget "FringeIngredientDecoderTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1B3198A6C0DCADD4B4015E0 /* Release */,
+				CA436DECFF4CB1326A27BD28 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7C7E826F658B65A738EFF372 /* Build configuration list for PBXNativeTarget "FringeIngredientDecoder" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8EACB5523917C5A21DD6601D /* Release */,
+				552F83F2BE315B1EE625C29A /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8B57AC874AE8C86EBA79564D /* Build configuration list for PBXProject "FringeIngredientDecoder" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4EAEFD307949F6E69F639453 /* Debug */,
+				8F729F1554B584A5FE9A1F23 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 5D81097E15040EDDC1830B1E /* Project object */;
+}

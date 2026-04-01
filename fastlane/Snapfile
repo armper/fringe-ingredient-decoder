@@ -1,0 +1,10 @@
+devices([
+  "iPhone 17 Pro Max",
+  "iPhone 17 Pro"
+])
+
+languages([
+  "en-US"
+])
+
+scheme("FringeIngredientDecoder")
