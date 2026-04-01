@@ -15,4 +15,18 @@ platform :ios do
       api_key_path: "/tmp/asc_api_key.json"
     )
   end
+
+  desc "Upload metadata only to App Store Connect"
+  lane :metadata_only do
+    deliver(
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      submit_for_review: false,
+      automatic_release: false,
+      force: true,
+      run_precheck_before_submit: false,
+      precheck_include_in_app_purchases: false,
+      api_key_path: "/tmp/asc_api_key.json"
+    )
+  end
 end

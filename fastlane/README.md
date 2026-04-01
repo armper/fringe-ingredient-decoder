@@ -23,6 +23,14 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 Upload metadata and screenshots to App Store Connect
 
+### ios metadata_only
+
+```sh
+[bundle exec] fastlane ios metadata_only
+```
+
+Upload metadata only to App Store Connect
+
 ----
 
 This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.
